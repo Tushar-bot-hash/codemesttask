@@ -3,7 +3,7 @@ import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
 import TagFilter from "./components/TagFilter";
 
-const API = "http://localhost:5000";
+const API = "https://research-notes-api.onrender.com";
 
 export default function App() {
   const [notes, setNotes] = useState([]);
