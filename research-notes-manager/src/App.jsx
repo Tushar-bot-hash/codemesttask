@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
 import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
 import TagFilter from "./components/TagFilter";
 
-const API = "https://research-notes-api.onrender.com";
+// Using the VITE_ prefix so the environment variables are accessible
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function App() {
   const [notes, setNotes] = useState([]);
@@ -13,28 +17,42 @@ export default function App() {
   const fetchNotes = async () => {
     setLoading(true);
     try {
-      const url = activeTag ? `${API}/notes?tag=${activeTag}` : `${API}/notes`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setNotes(data);
+      // Build the query
+      let query = supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Apply filter if a tag is selected
+      if (activeTag) {
+        query = query.eq('tag', activeTag);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setNotes(data || []);
     } catch (err) {
-      console.error("Failed to fetch notes:", err);
+      console.error("Failed to fetch notes:", err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  useEffect(() => { fetchNotes(); }, [activeTag]);
+  useEffect(() => {
+    fetchNotes();
+  }, [activeTag]);
 
   const addNote = async (note) => {
     try {
-      await fetch(`${API}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(note),
-      });
-      fetchNotes();
+      const { error } = await supabase
+        .from('notes')
+        .insert([note]);
+        
+      if (error) throw error;
+      fetchNotes(); // Refresh the list
     } catch (err) {
-      console.error("Failed to add note:", err);
+      console.error("Failed to add note:", err.message);
     }
   };
 
