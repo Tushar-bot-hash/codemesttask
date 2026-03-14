@@ -3,5 +3,16 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
-  "ignoreCommand": "exit 1"
+  "ignoreCommand": "exit 1",
+  "headers": [
+    {
+      "source": "/assets/(.*).js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    }
+  ]
 }
